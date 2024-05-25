@@ -1,0 +1,55 @@
+syntax="proto3";
+package userpb;
+option go_package = "./proto/user";
+
+import "google/api/annotations.proto";
+
+message AddUserRequest {
+    string userName = 1;
+    string userEmail = 2;
+    string userPhone = 3;
+    string userPassword = 4;
+    string userAddress = 5;
+    string userCity = 6;
+}
+message AddUserResponse {
+    string message = 1;
+    int64 statusCode = 2;
+    string token = 3;
+}
+message SendOTPRequest {
+    string phone = 1;
+}
+message SendOTPResponse {
+    string message = 1;
+    int64 statusCode = 2;
+}
+message VerifyOtpRequest {
+    string phone = 1;
+    string otp = 2;
+}
+message VerifyOtpResponse {
+    string message = 1;
+    int64 statusCode = 2;
+    string token = 3;
+}
+service UserService {
+    rpc AddUser(AddUserRequest) returns (AddUserResponse){
+        option (google.api.http) = {
+            post: "/v1/user/add"
+            body: "*"
+        };
+    };
+    rpc SendOTP(SendOTPRequest) returns (SendOTPResponse){
+        option (google.api.http) = {
+            post: "/v1/user/sendotp"
+            body: "*"
+        };
+    }
+    rpc VerifyOTP(VerifyOtpRequest) returns (VerifyOtpResponse){
+        option (google.api.http) = {
+            post: "/v1/user/verifyotp"
+            body: "*"
+        };
+    }
+}
