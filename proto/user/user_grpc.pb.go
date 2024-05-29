@@ -23,8 +23,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	AddUser(ctx context.Context, in *AddUserRequest, opts ...grpc.CallOption) (*AddUserResponse, error)
-	SendOTP(ctx context.Context, in *SendOTPRequest, opts ...grpc.CallOption) (*SendOTPResponse, error)
-	VerifyOTP(ctx context.Context, in *VerifyOtpRequest, opts ...grpc.CallOption) (*VerifyOtpResponse, error)
 }
 
 type userServiceClient struct {
@@ -44,31 +42,11 @@ func (c *userServiceClient) AddUser(ctx context.Context, in *AddUserRequest, opt
 	return out, nil
 }
 
-func (c *userServiceClient) SendOTP(ctx context.Context, in *SendOTPRequest, opts ...grpc.CallOption) (*SendOTPResponse, error) {
-	out := new(SendOTPResponse)
-	err := c.cc.Invoke(ctx, "/userpb.UserService/SendOTP", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) VerifyOTP(ctx context.Context, in *VerifyOtpRequest, opts ...grpc.CallOption) (*VerifyOtpResponse, error) {
-	out := new(VerifyOtpResponse)
-	err := c.cc.Invoke(ctx, "/userpb.UserService/VerifyOTP", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
 	AddUser(context.Context, *AddUserRequest) (*AddUserResponse, error)
-	SendOTP(context.Context, *SendOTPRequest) (*SendOTPResponse, error)
-	VerifyOTP(context.Context, *VerifyOtpRequest) (*VerifyOtpResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -78,12 +56,6 @@ type UnimplementedUserServiceServer struct {
 
 func (UnimplementedUserServiceServer) AddUser(context.Context, *AddUserRequest) (*AddUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddUser not implemented")
-}
-func (UnimplementedUserServiceServer) SendOTP(context.Context, *SendOTPRequest) (*SendOTPResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendOTP not implemented")
-}
-func (UnimplementedUserServiceServer) VerifyOTP(context.Context, *VerifyOtpRequest) (*VerifyOtpResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyOTP not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -116,42 +88,6 @@ func _UserService_AddUser_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_SendOTP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendOTPRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).SendOTP(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/userpb.UserService/SendOTP",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).SendOTP(ctx, req.(*SendOTPRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_VerifyOTP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyOtpRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).VerifyOTP(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/userpb.UserService/VerifyOTP",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).VerifyOTP(ctx, req.(*VerifyOtpRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -162,14 +98,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddUser",
 			Handler:    _UserService_AddUser_Handler,
-		},
-		{
-			MethodName: "SendOTP",
-			Handler:    _UserService_SendOTP_Handler,
-		},
-		{
-			MethodName: "VerifyOTP",
-			Handler:    _UserService_VerifyOTP_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

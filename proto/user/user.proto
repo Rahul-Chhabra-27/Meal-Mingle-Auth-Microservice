@@ -17,22 +17,6 @@ message AddUserResponse {
     int64 statusCode = 2;
     string token = 3;
 }
-message SendOTPRequest {
-    string phone = 1;
-}
-message SendOTPResponse {
-    string message = 1;
-    int64 statusCode = 2;
-}
-message VerifyOtpRequest {
-    string phone = 1;
-    string otp = 2;
-}
-message VerifyOtpResponse {
-    string message = 1;
-    int64 statusCode = 2;
-    string token = 3;
-}
 service UserService {
     rpc AddUser(AddUserRequest) returns (AddUserResponse){
         option (google.api.http) = {
@@ -40,16 +24,4 @@ service UserService {
             body: "*"
         };
     };
-    rpc SendOTP(SendOTPRequest) returns (SendOTPResponse){
-        option (google.api.http) = {
-            post: "/v1/user/sendotp"
-            body: "*"
-        };
-    }
-    rpc VerifyOTP(VerifyOtpRequest) returns (VerifyOtpResponse){
-        option (google.api.http) = {
-            post: "/v1/user/verifyotp"
-            body: "*"
-        };
-    }
 }

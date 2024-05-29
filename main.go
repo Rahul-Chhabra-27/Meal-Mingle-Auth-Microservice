@@ -48,12 +48,13 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 		// Create a new user in the database and return the primary key if successful or an error if it fails
 		primaryKey := dbConnector.Create(newUser)
 		if primaryKey.Error != nil {
-			return nil, primaryKey.Error
+			return &userpb.AddUserResponse{Message: "User is already exist", StatusCode: int64(codes.AlreadyExists)}, nil;
 		}
 
 		// Gennerating the the jwt token.
-		token, err := userServiceManager.jwtManager.GenerateToken(&model.User{})
+		token, err := userServiceManager.jwtManager.GenerateToken(newUser)
 		if err != nil {
+			fmt.Println("Error in generating token")
 			return nil, status.Errorf(
 				codes.Internal,
 				fmt.Sprintf("Could not generate token: %s", err),
@@ -61,44 +62,7 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 		}
 		return &userpb.AddUserResponse{Message: "User created successfully", StatusCode: 200,Token: token}, nil
 	}
-	return &userpb.AddUserResponse{Message: "Email is already used!", StatusCode: 208,Token: ""}, userNotFoundError
-}
-func (*UserService) SendOTP(ctx context.Context, request *userpb.SendOTPRequest) (*userpb.SendOTPResponse, error) {
-	fmt.Println("SendOTP function was invoked with request: ", request)
-	//check if the user is already exist or not
-	var existingUser model.User;
-	userNotFoundError := dbConnector.Where("phone = ?", request.Phone).First(&existingUser).Error
-	if userNotFoundError != nil {
-		return &userpb.SendOTPResponse{ Message: "Register First", StatusCode: http.StatusNotFound }, nil
-	} else {
-		getOtpError := config.SendOtp(request.Phone)
-		if getOtpError != nil {
-			return &userpb.SendOTPResponse{ Message: "Failed to send OTP", StatusCode: http.StatusMethodNotAllowed }, nil
-		}
-		return &userpb.SendOTPResponse{ Message: "OTP sent successfully",  StatusCode: http.StatusAccepted }, nil
-	}
-}
-func (userServiceManager *UserService) VerifyOTP(ctx context.Context, request *userpb.VerifyOtpRequest) (*userpb.VerifyOtpResponse, error) {
-	fmt.Println("VerifyOTP function was invoked with request: ", request)
-	response, err := config.CheckOtp(request.Phone, request.Otp)
-	if err != nil {
-		fmt.Println("Error in otp verification")
-		return &userpb.VerifyOtpResponse{ Message: "Error in otp verification", StatusCode: http.StatusInternalServerError }, nil
-	} else {
-		if response == "approved" {
-			// Gennerating the the jwt token.
-			token, err := userServiceManager.jwtManager.GenerateToken(&model.User{})
-			if err != nil {
-				return nil, status.Errorf(
-					codes.Internal,
-					fmt.Sprintf("Could not generate token: %s", err),
-				)
-			}
-			return &userpb.VerifyOtpResponse{ Message: "OTP VERIFIED SUCCESSFULLY", StatusCode: http.StatusAccepted, Token: token }, nil
-		} else {
-			return &userpb.VerifyOtpResponse{ Message: "Invalid OTP", StatusCode: http.StatusBadRequest,Token: ""}, nil
-		}
-	}
+	return &userpb.AddUserResponse{Message: "User is already exist", StatusCode: int64(codes.AlreadyExists)}, nil;
 }
 // Responsible for starting the server
 func startServer() {
