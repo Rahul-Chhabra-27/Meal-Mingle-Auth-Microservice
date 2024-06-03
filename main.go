@@ -3,7 +3,6 @@ package main
 import (
 	"auth-microservice/config"
 	"auth-microservice/jwt"
-	"auth-microservice/model"
 	userpb "auth-microservice/proto/user"
 	"context"
 	"fmt"
@@ -16,9 +15,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
@@ -29,41 +26,6 @@ type UserService struct {
 	jwtManager *jwt.JWTManager
 }
 
-// AddUser is a RPC that adds a new user to the database
-func (userServiceManager *UserService) AddUser(ctx context.Context, request *userpb.AddUserRequest) (*userpb.AddUserResponse, error) {
-	userEmail := request.UserEmail
-	userPassword := request.UserPassword
-	var existingUser model.User
-	userNotFoundError := dbConnector.Where("email = ?", userEmail).First(&existingUser).Error
-	// If the user is not found, create a new user with the provided details
-	if userNotFoundError != nil {
-		userName := request.UserName
-		userAddress := request.UserAddress
-		userCity := request.UserCity
-		userPhone := request.UserPhone
-		hashedPassword := config.GenerateHashedPassword(userPassword)
-
-		newUser := &model.User{Name: userName, Address: userAddress, Email: userEmail, City: userCity, Phone: userPhone, Password: hashedPassword}
-
-		// Create a new user in the database and return the primary key if successful or an error if it fails
-		primaryKey := dbConnector.Create(newUser)
-		if primaryKey.Error != nil {
-			return &userpb.AddUserResponse{Message: "User is already exist", StatusCode: int64(codes.AlreadyExists)}, nil;
-		}
-
-		// Gennerating the the jwt token.
-		token, err := userServiceManager.jwtManager.GenerateToken(newUser)
-		if err != nil {
-			fmt.Println("Error in generating token")
-			return nil, status.Errorf(
-				codes.Internal,
-				fmt.Sprintf("Could not generate token: %s", err),
-			)
-		}
-		return &userpb.AddUserResponse{Message: "User created successfully", StatusCode: 200,Token: token}, nil
-	}
-	return &userpb.AddUserResponse{Message: "User is already exist", StatusCode: int64(codes.AlreadyExists)}, nil;
-}
 // Responsible for starting the server
 func startServer() {
 	// Log a message

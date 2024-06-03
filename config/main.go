@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
@@ -13,6 +15,25 @@ import (
 	"gorm.io/gorm"
 )
 
+func ValidateFields(userEmail string, userPassword string, userName string, userAddress string, userCity string, userPhone string) bool {
+	// Responsible for validating the fields
+	if userEmail == "" || userPassword == "" || userName == "" || userAddress == "" || userCity == "" || userPhone == "" {
+		return false
+	}
+	if !strings.Contains(userEmail, "@") || !strings.Contains(userEmail, ".") {
+		return false
+	}
+	if len(userPhone) != 10 {
+		return false
+	}
+	
+	for _, char := range userPhone {
+		if char < '0' || char > '9' {
+			return false
+		}
+	}
+	return true
+}
 func GoDotEnvVariable(key string) string {
 	err := godotenv.Load(".env")
 	if err != nil {
