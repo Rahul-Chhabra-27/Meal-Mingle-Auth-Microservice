@@ -15,9 +15,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func ValidateFields(userEmail string, userPassword string, userName string, userAddress string, userCity string, userPhone string) bool {
+func ValidateFields(userEmail string, userPassword string, userName string, userPhone string) bool {
 	// Responsible for validating the fields
-	if userEmail == "" || userPassword == "" || userName == "" || userAddress == "" || userCity == "" || userPhone == "" {
+	if userEmail == "" || userPassword == "" || userName == "" || userPhone == "" {
 		return false
 	}
 	if !strings.Contains(userEmail, "@") || !strings.Contains(userEmail, ".") {

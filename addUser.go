@@ -15,12 +15,10 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 	userEmail := request.UserEmail
 	userPassword := request.UserPassword
 	userName := request.UserName
-	userAddress := request.UserAddress
-	userCity := request.UserCity
 	userPhone := request.UserPhone
-
+	fmt.Println("AddUser function was invoked with email: ", userEmail)
 	// Validate the fields
-	if !config.ValidateFields(userEmail, userPassword, userName, userAddress, userCity, userPhone) {
+	if !config.ValidateFields(userEmail, userPassword, userName, userPhone) {
 		return &userpb.AddUserResponse{Message: "Invalid fields!", StatusCode: int64(codes.InvalidArgument)}, nil
 	}
 	var existingUser model.User
@@ -30,7 +28,7 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 		
 		hashedPassword := config.GenerateHashedPassword(userPassword)
 
-		newUser := &model.User{Name: userName, Address: userAddress, Email: userEmail, City: userCity, Phone: userPhone, Password: hashedPassword}
+		newUser := &model.User{Name: userName, Email: userEmail, Phone: userPhone, Password: hashedPassword}
 
 		// Create a new user in the database and return the primary key if successful or an error if it fails
 		primaryKey := dbConnector.Create(newUser)

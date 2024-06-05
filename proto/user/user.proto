@@ -9,8 +9,6 @@ message AddUserRequest {
     string userEmail = 2;
     string userPhone = 3;
     string userPassword = 4;
-    string userAddress = 5;
-    string userCity = 6;
 }
 message AddUserResponse {
     string message = 1;
