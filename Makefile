@@ -1,9 +1,3 @@
-grpc-server:
-	go run server/main.go
-
-grpc-client:
-	go run client/main.go
-
 proto-generate:
 	protoc -I ./proto \
 	--go_out ./proto --go_opt paths=source_relative \

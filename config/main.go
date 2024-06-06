@@ -64,3 +64,7 @@ func UnaryInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, 
 	fmt.Println("--> UnaryInterceptor: ", info.FullMethod)
 	return handler(ctx, req)
 }
+
+func ComparePasswords(hashedPassword string, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}

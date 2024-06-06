@@ -33,7 +33,7 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 		// Create a new user in the database and return the primary key if successful or an error if it fails
 		primaryKey := dbConnector.Create(newUser)
 		if primaryKey.Error != nil {
-			return &userpb.AddUserResponse{Message: "User is already exist", StatusCode: int64(codes.AlreadyExists)}, nil
+			return &userpb.AddUserResponse{Message: "User is already exist", StatusCode: int64(409)}, nil
 		}
 
 		// Gennerating the the jwt token.
