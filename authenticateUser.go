@@ -12,6 +12,7 @@ import (
 func (UserServiceManager *UserService) AuthenticateUser(ctx context.Context, request *userpb.AuthenticateUserRequest) (*userpb.AuthenticateUserResponse, error) {
 	userEmail := request.UserEmail
 	userPassword := request.UserPassword
+	fmt.Println("AuthenticateUser function was invoked with email: ", userEmail, " password: ", userPassword)
 	// Validate the fields
 	if userEmail == "" || userPassword == "" {
 		return &userpb.AuthenticateUserResponse{Message: "", Error: "Invalid fields!", StatusCode: 400}, nil

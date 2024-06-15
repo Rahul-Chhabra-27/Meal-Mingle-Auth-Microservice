@@ -14,7 +14,15 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
-
+func DatabaseDsn() string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+		os.Getenv("MYSQL_USER"),
+		os.Getenv("MYSQL_PASSWORD"),
+		os.Getenv("MYSQL_HOST"),
+		os.Getenv("MYSQL_PORT"),
+		os.Getenv("MYSQL_DATABASE"),
+	)
+}
 func ValidateFields(userEmail string, userPassword string, userName string, userPhone string) bool {
 	// Responsible for validating the fields
 	if userEmail == "" || userPassword == "" || userName == "" || userPhone == "" {
@@ -41,9 +49,9 @@ func GoDotEnvVariable(key string) string {
 	}
 	return os.Getenv(key)
 }
-func ConnectDB(dsn string) *gorm.DB {
+func ConnectDB() *gorm.DB {
 	// Responsible for connecting to the database
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(DatabaseDsn()), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
