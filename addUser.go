@@ -15,37 +15,58 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 	userPassword := request.UserPassword
 	userName := request.UserName
 	userPhone := request.UserPhone
-	fmt.Println("AddUser function was invoked with email: ", userEmail, " password: ", userPassword, " name: ", userName, " phone: ", userPhone)
-	// Validate the fields
+	userRole := request.UserRole
+
 	if !config.ValidateFields(userEmail, userPassword, userName, userPhone) {
-		return &userpb.AddUserResponse{Message: "", Error: "Invalid fields!", StatusCode: int64(400)}, nil
+		return &userpb.AddUserResponse{
+			Data: nil,
+			Message: "The request contains missing or invalid fields.", 
+			Error: "Invalid Request", 
+			StatusCode: int64(400),
+		}, nil
 	}
 	var existingUser model.User
-	userNotFoundError := dbConnector.Where("email = ?", userEmail).First(&existingUser).Error
-	// If the user is not found, create a new user with the provided details
+	userNotFoundError := userDbConnector.Where("email = ?", userEmail).First(&existingUser).Error
 	if userNotFoundError != nil {
-
 		hashedPassword := config.GenerateHashedPassword(userPassword)
-
-		newUser := &model.User{Name: userName, Email: userEmail, Phone: userPhone, Password: hashedPassword}
+		newUser := &model.User{ Name: userName, Email: userEmail,
+			Phone: userPhone, Password: hashedPassword, Role: userRole}
 
 		// Create a new user in the database and return the primary key if successful or an error if it fails
-		primaryKey := dbConnector.Create(newUser)
+		primaryKey := userDbConnector.Create(newUser)
 		if primaryKey.Error != nil {
-			return &userpb.AddUserResponse{Message: "", Error: "Phone number is already registered", StatusCode: int64(400)}, nil
+			return &userpb.AddUserResponse{
+				Data: nil,
+				Message: "Conflict", 
+				Error: "The phone number is already registered.", 
+				StatusCode: int64(400),
+			}, nil
 		}
-
 		// Gennerating the the jwt token.
 		token, err := userServiceManager.jwtManager.GenerateToken(newUser)
 		if err != nil {
 			fmt.Println("Error in generating token")
 			return &userpb.AddUserResponse{
+				Data: nil,
 				Error:      "Internal Server Error",
 				StatusCode: int64(500),
-				Message:    "",
+				Message:    "Security Issues, Please try again later.",
 			}, nil
 		}
-		return &userpb.AddUserResponse{Message: "User created successfully", Error: "", StatusCode: 200, Data: &userpb.Data{User: &userpb.User{UserId: strconv.FormatUint(uint64(newUser.ID), 10), UserName: newUser.Name, UserEmail: newUser.Email}, Token: token}}, nil
+		return &userpb.AddUserResponse{
+			Message: "User created successfully", 
+			Error: "", StatusCode: 200, 
+			Data: &userpb.Responsedata{ 
+				User: &userpb.User{UserId: strconv.FormatUint(uint64(newUser.ID), 10), 
+					UserName: newUser.Name, UserEmail: newUser.Email}, 
+					Token: token,
+				},
+			}, nil
 	}
-	return &userpb.AddUserResponse{Message: "", Error: "User Email is already registered", StatusCode: int64(400)}, nil
+	return &userpb.AddUserResponse{
+		Data: nil,
+		Message: "User Email is already registered", 
+		Error: "Conflict", 
+		StatusCode: int64(409),
+	}, nil
 }

@@ -20,8 +20,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var dbConnector *gorm.DB
-
+var userDbConnector *gorm.DB
+var ownerDetailsDbConector *gorm.DB
 type UserService struct {
 	userpb.UnimplementedUserServiceServer
 	jwtManager *jwt.JWTManager
@@ -36,9 +36,9 @@ func startServer() {
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
-	
+
 	// Create a new context
-	dbConnector = config.ConnectDB()
+	userDbConnector, ownerDetailsDbConector = config.ConnectDB()
 
 	// Start the server on port 50051
 	listener, err := net.Listen("tcp", "localhost:50051")
@@ -54,7 +54,7 @@ func startServer() {
 
 	// Create a new gRPC server
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(config.UnaryInterceptor),
+		grpc.UnaryInterceptor(jwt.UnaryInterceptor),
 	)
 
 	// Register the service with the server
