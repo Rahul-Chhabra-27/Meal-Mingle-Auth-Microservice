@@ -25,5 +25,5 @@ type Details struct {
 	GstNumber string
 	AdharNumber string
 	// foreign key for user table
-	UserId string `gorm:"foreignKey:UserID"`
+	UserId string `gorm:"foreignKey:UserID;unique"`
 }

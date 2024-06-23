@@ -56,6 +56,24 @@ message AddOwnerDetailsResponse {
     string error = 3;
     int64 statusCode = 4;
 }
+message UpdateOwnerDetailsResponseData {
+    string userId = 1;
+}
+message UpdateOwnerDetailsRequest {
+    string accountNumber = 1;
+    string ifscCode = 2;
+    string bankName = 3;
+    string branchName = 4;
+    string panNumber = 5;
+    string adharNumber = 6;
+    string gstNumber = 7;
+}
+message UpdateOwnerDetailsResponse {
+    UpdateOwnerDetailsResponseData data = 1;
+    string message = 2;
+    string error = 3;
+    int64 statusCode = 4;
+}
 service UserService {
     rpc AddUser(AddUserRequest) returns (AddUserResponse){
         option (google.api.http) = {
@@ -72,6 +90,12 @@ service UserService {
     rpc AddOwnerDetails(AddOwnerDetailsRequest) returns (AddOwnerDetailsResponse){
         option (google.api.http) = {
             post: "/api/users/details"
+            body: "*"
+        };
+    };
+    rpc UpdateOwnerDetails(UpdateOwnerDetailsRequest) returns (UpdateOwnerDetailsResponse){
+        option (google.api.http) = {
+            put: "/api/users/details"
             body: "*"
         };
     };

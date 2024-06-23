@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	UserService_AddUser_FullMethodName          = "/userpb.UserService/AddUser"
-	UserService_AuthenticateUser_FullMethodName = "/userpb.UserService/AuthenticateUser"
-	UserService_AddOwnerDetails_FullMethodName  = "/userpb.UserService/AddOwnerDetails"
+	UserService_AddUser_FullMethodName            = "/userpb.UserService/AddUser"
+	UserService_AuthenticateUser_FullMethodName   = "/userpb.UserService/AuthenticateUser"
+	UserService_AddOwnerDetails_FullMethodName    = "/userpb.UserService/AddOwnerDetails"
+	UserService_UpdateOwnerDetails_FullMethodName = "/userpb.UserService/UpdateOwnerDetails"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -31,6 +32,7 @@ type UserServiceClient interface {
 	AddUser(ctx context.Context, in *AddUserRequest, opts ...grpc.CallOption) (*AddUserResponse, error)
 	AuthenticateUser(ctx context.Context, in *AuthenticateUserRequest, opts ...grpc.CallOption) (*AuthenticateUserResponse, error)
 	AddOwnerDetails(ctx context.Context, in *AddOwnerDetailsRequest, opts ...grpc.CallOption) (*AddOwnerDetailsResponse, error)
+	UpdateOwnerDetails(ctx context.Context, in *UpdateOwnerDetailsRequest, opts ...grpc.CallOption) (*UpdateOwnerDetailsResponse, error)
 }
 
 type userServiceClient struct {
@@ -71,6 +73,16 @@ func (c *userServiceClient) AddOwnerDetails(ctx context.Context, in *AddOwnerDet
 	return out, nil
 }
 
+func (c *userServiceClient) UpdateOwnerDetails(ctx context.Context, in *UpdateOwnerDetailsRequest, opts ...grpc.CallOption) (*UpdateOwnerDetailsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateOwnerDetailsResponse)
+	err := c.cc.Invoke(ctx, UserService_UpdateOwnerDetails_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -78,6 +90,7 @@ type UserServiceServer interface {
 	AddUser(context.Context, *AddUserRequest) (*AddUserResponse, error)
 	AuthenticateUser(context.Context, *AuthenticateUserRequest) (*AuthenticateUserResponse, error)
 	AddOwnerDetails(context.Context, *AddOwnerDetailsRequest) (*AddOwnerDetailsResponse, error)
+	UpdateOwnerDetails(context.Context, *UpdateOwnerDetailsRequest) (*UpdateOwnerDetailsResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -93,6 +106,9 @@ func (UnimplementedUserServiceServer) AuthenticateUser(context.Context, *Authent
 }
 func (UnimplementedUserServiceServer) AddOwnerDetails(context.Context, *AddOwnerDetailsRequest) (*AddOwnerDetailsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddOwnerDetails not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateOwnerDetails(context.Context, *UpdateOwnerDetailsRequest) (*UpdateOwnerDetailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateOwnerDetails not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -161,6 +177,24 @@ func _UserService_AddOwnerDetails_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_UpdateOwnerDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOwnerDetailsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateOwnerDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateOwnerDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateOwnerDetails(ctx, req.(*UpdateOwnerDetailsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -179,6 +213,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddOwnerDetails",
 			Handler:    _UserService_AddOwnerDetails_Handler,
+		},
+		{
+			MethodName: "UpdateOwnerDetails",
+			Handler:    _UserService_UpdateOwnerDetails_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

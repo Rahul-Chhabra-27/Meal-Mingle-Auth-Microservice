@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
@@ -80,10 +82,24 @@ func ComparePasswords(hashedPassword string, password string) error {
 
 func ValidateOwnerDeatils(AccountNumber string, IFSCCode string,
 	BankName string, BranchName string, PanNumber string,
-	AdharNumber string,GstNumber string) bool {
+	AdharNumber string, GstNumber string) bool {
 	// Responsible for validating the fields
-	if AccountNumber == "" || IFSCCode == "" || BankName == ""|| 
-	BranchName == "" || PanNumber == "" || AdharNumber == "" || GstNumber == "" {
+	if AccountNumber == "" || IFSCCode == "" || BankName == "" ||
+		BranchName == "" || PanNumber == "" || AdharNumber == "" || GstNumber == "" {
+		return false
+	}
+	if len(AccountNumber) != 10 {
+		return false
+	}
+
+	// Check if IFSC code is 11 characters and starts with a letter
+	if len(IFSCCode) != 11 || !unicode.IsLetter(rune(IFSCCode[0])) {
+		return false
+	}
+
+	// Check if GST number is 15 characters and matches the pattern
+	gstPattern := regexp.MustCompile(`\d{2}[A-Z]{5}\d{4}[A-Z]{1}\d[Z]{1}[A-Z\d]{1}`)
+	if len(GstNumber) != 15 || !gstPattern.MatchString(GstNumber) {
 		return false
 	}
 	return true
