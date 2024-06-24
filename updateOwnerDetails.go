@@ -33,7 +33,8 @@ func (*UserService) UpdateOwnerDetails(ctx context.Context, request *userpb.Upda
 	}
 	// validate fields here
 	if !config.ValidateOwnerDeatils(request.AccountNumber, request.IfscCode,
-		request.BankName, request.BranchName, request.PanNumber, request.AdharNumber, request.GstNumber) {
+		request.BankName, request.BranchName, request.PanNumber,
+		request.AdharNumber, request.GstNumber) {
 		return &userpb.UpdateOwnerDetailsResponse{
 			Data:       nil,
 			Message:    "You do not have permission to perform this action. Invalid owner details.",

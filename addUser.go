@@ -20,7 +20,7 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 	if !config.ValidateFields(userEmail, userPassword, userName, userPhone) {
 		return &userpb.AddUserResponse{
 			Data: nil,
-			Message: "The request contains missing or invalid fields.", 
+			Message: "The request contains missing or invalid fields. Make sure Phone number is 10 digits long.", 
 			Error: "Invalid Request", 
 			StatusCode: int64(400),
 		}, nil
@@ -57,11 +57,15 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 			Message: "User created successfully", 
 			Error: "", StatusCode: 200, 
 			Data: &userpb.Responsedata{ 
-				User: &userpb.User{UserId: strconv.FormatUint(uint64(newUser.ID), 10), 
-					UserName: newUser.Name, UserEmail: newUser.Email}, 
-					Token: token,
-				},
-			}, nil
+				User: &userpb.User{
+					UserId: strconv.FormatUint(uint64(newUser.ID), 10), 
+					UserName: newUser.Name, 
+					UserEmail: newUser.Email,
+					UserPhone: newUser.Phone,
+				}, 
+				Token: token,
+			},
+		}, nil
 	}
 	return &userpb.AddUserResponse{
 		Data: nil,

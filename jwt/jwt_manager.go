@@ -22,6 +22,7 @@ type JWTManager struct {
 type UserClaims struct {
 	jwt.StandardClaims
 	UserEmail string
+	UserRole  string
 }
 
 func NewJWTManager(secretKey string, tokenDuration time.Duration) (*JWTManager, error) {
@@ -36,6 +37,7 @@ func (manager *JWTManager) GenerateToken(user *model.User) (string, error) {
 			ExpiresAt: time.Now().Add(manager.tokenDuration).Unix(),
 		},
 		UserEmail: user.Email,
+		UserRole:  user.Role,
 	}
 	// creating new token...
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -86,6 +88,7 @@ func UnaryInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, 
 	}
 	// Pass useremail to context for further use
 	ctx = context.WithValue(ctx, "userEmail", claims.UserEmail)
+	ctx = context.WithValue(ctx, "userRole", claims.UserRole)
 	// Proceed with the request
 	return handler(ctx, req)
 }
