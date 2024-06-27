@@ -8,3 +8,4 @@ go get github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
 go get github.com/grpc-ecosystem/grpc-gateway/v2/runtime
 go get github.com/joho/godotenv
 go get github.com/dgrijalva/jwt-go
+go get -u go.uber.org/zap

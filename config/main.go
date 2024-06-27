@@ -41,7 +41,8 @@ func ValidateFields(userEmail string, userPassword string, userName string, user
 			return false
 		}
 	}
-	return true
+	// password validation also
+	return len(userPassword) >= 6;
 }
 func GoDotEnvVariable(key string) string {
 	err := godotenv.Load(".env")

@@ -67,8 +67,6 @@ func VerifyToken(accessToken string) (*UserClaims, error) {
 }
 func UnaryInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	// skip the authentication for the health check endpoint
-	// skip register user and login user.
-	fmt.Println("info.FullMethod: ", info.FullMethod)
 	if info.FullMethod == "/userpb.UserService/AddUser" || info.FullMethod == "/userpb.UserService/AuthenticateUser" {
 		return handler(ctx, req)
 	}

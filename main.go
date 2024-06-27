@@ -15,13 +15,25 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/gorm"
 )
 
+var logger *zap.Logger
+func init() {
+	var err error
+	logger, err = zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	defer logger.Sync()
+}
+
 var userDbConnector *gorm.DB
 var ownerDetailsDbConector *gorm.DB
+
 type UserService struct {
 	userpb.UnimplementedUserServiceServer
 	jwtManager *jwt.JWTManager
