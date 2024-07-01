@@ -28,7 +28,7 @@ func (*UserService) AddOwnerDetails(ctx context.Context, request *userpb.AddOwne
 		return &userpb.AddOwnerDetailsResponse{
 			Message:    "Failed to get user email and role from context",
 			Error:      "Internal Server Error",
-			StatusCode: int64(500),
+			StatusCode: StatusInternalServerError,
 		}, nil
 	}
 	logger.Info("Context values retrieved", zap.String("userEmail", userEmail), zap.String("userRole", userRole))
@@ -37,7 +37,7 @@ func (*UserService) AddOwnerDetails(ctx context.Context, request *userpb.AddOwne
 		return &userpb.AddOwnerDetailsResponse{
 			Data:       nil,
 			Message:    "You do not have permission to perform this action. Only admin can add owner details",
-			StatusCode: 403,
+			StatusCode: StatusForbidden,
 			Error:      "Forbidden",
 		}, nil
 	}
@@ -58,7 +58,7 @@ func (*UserService) AddOwnerDetails(ctx context.Context, request *userpb.AddOwne
 			Data:       nil,
 			Message:    "Invalid owner details make sure to use mentioned format.",
 			Error:      "Invalid Fields",
-			StatusCode: int64(400),
+			StatusCode: StatusBadRequest,
 		}, nil
 	}
 	// check if the user is owner or not
@@ -78,7 +78,7 @@ func (*UserService) AddOwnerDetails(ctx context.Context, request *userpb.AddOwne
 				Data:       nil,
 				Message:    "Owner details already exist",
 				Error:      "Failed to create owner details",
-				StatusCode: 409,
+				StatusCode: StatusConflict,
 			}, nil
 		}
 		logger.Info("Owner details added successfully", zap.String("userId", ownerDetails.UserId))
@@ -88,13 +88,13 @@ func (*UserService) AddOwnerDetails(ctx context.Context, request *userpb.AddOwne
 			},
 			Message:    "Owner details added successfully",
 			Error:      "",
-			StatusCode: int64(200),
+			StatusCode: StatusCreated,
 		}, nil
 	}
 	logger.Warn("Owner details already exist", zap.String("userId", ownerDetails.UserId))
 	return &userpb.AddOwnerDetailsResponse{
 		Message:    "Owner details already exists",
 		Error:      "Conflict",
-		StatusCode: int64(409),
+		StatusCode: StatusConflict,
 	}, nil
 }

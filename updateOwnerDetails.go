@@ -18,7 +18,7 @@ func (*UserService) UpdateOwnerDetails(ctx context.Context, request *userpb.Upda
 		return &userpb.UpdateOwnerDetailsResponse{
 			Data:       nil,
 			Message:    "Failed to get user email from context",
-			StatusCode: 500,
+			StatusCode: StatusInternalServerError,
 			Error:      "Internal Server Error",
 		}, nil
 	}
@@ -34,7 +34,7 @@ func (*UserService) UpdateOwnerDetails(ctx context.Context, request *userpb.Upda
 			Data:       nil,
 			Message:    "Admin does not exist",
 			Error:      "Not authorized",
-			StatusCode: int64(404),
+			StatusCode: StatusNotFound,
 		}, nil
 	}
 	logger.Info("Retrieved user details successfully", zap.String("userEmail", userEmail))
@@ -47,7 +47,7 @@ func (*UserService) UpdateOwnerDetails(ctx context.Context, request *userpb.Upda
 			Data:       nil,
 			Message:    "You do not have permission to perform this action. Invalid owner details.",
 			Error:      "Invalid Fields",
-			StatusCode: int64(400),
+			StatusCode: StatusBadRequest,
 		}, nil
 	}
 	// check if owner details already exists
@@ -58,7 +58,7 @@ func (*UserService) UpdateOwnerDetails(ctx context.Context, request *userpb.Upda
 			Data:       nil,
 			Message:    "Owner details not found",
 			Error:      "Not authorized",
-			StatusCode: int64(404),
+			StatusCode: StatusNotFound,
 		}, nil
 	}
 
@@ -71,14 +71,23 @@ func (*UserService) UpdateOwnerDetails(ctx context.Context, request *userpb.Upda
 	ownerDetails.GstNumber = request.GstNumber
 	ownerDetails.UserId = strconv.FormatUint(uint64(user.ID), 10)
 
+	// Save updated owner details
+	if err := ownerDetailsDbConector.Where("user_id = ?", user.ID).Save(&ownerDetails).Error; err != nil {
+		logger.Error("Failed to update owner details", zap.String("userEmail", userEmail), zap.Error(err))
+		return &userpb.UpdateOwnerDetailsResponse{
+			Data:       nil,
+			Message:    "Failed to update owner details",
+			Error:      "Internal Server Error",
+			StatusCode: StatusInternalServerError,
+		}, nil
+	}
 	logger.Info("Owner details updated successfully", zap.String("userEmail", userEmail))
-	ownerDetailsDbConector.Where("user_id = ?", user.ID).Save(&ownerDetails)
 	return &userpb.UpdateOwnerDetailsResponse{
 		Data: &userpb.UpdateOwnerDetailsResponseData{
 			UserId: ownerDetails.UserId,
 		},
 		Message:    "Owner details updated successfully",
-		StatusCode: int64(200),
+		StatusCode: StatusOK,
 		Error:      "",
 	}, nil
 }

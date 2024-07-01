@@ -5,7 +5,6 @@ import (
 	"auth-microservice/jwt"
 	userpb "auth-microservice/proto/user"
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -21,7 +20,18 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	StatusBadRequest       = 400
+	StatusConflict         = 409
+	StatusInternalServerError = 500
+	StatusOK               = 200
+	StatusCreated          = 201
+	StatusNotFound         = 404
+	StatusUnauthorized     = 401
+	StatusForbidden        = 403
+)
 var logger *zap.Logger
+
 func init() {
 	var err error
 	logger, err = zap.NewDevelopment()
@@ -42,11 +52,12 @@ type UserService struct {
 // Responsible for starting the server
 func startServer() {
 	// Log a message
-	fmt.Println("Starting server...")
+
+	logger.Info("Starting server...")
 	// Initialize the gotenv file..
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		logger.Fatal("Error loading .env file", zap.Error(err))
 	}
 
 	// Create a new context
@@ -55,13 +66,13 @@ func startServer() {
 	// Start the server on port 50051
 	listener, err := net.Listen("tcp", "localhost:50051")
 	if err != nil {
-		log.Fatalf("Failed to start server: %s", err)
+		logger.Fatal("Failed to start server", zap.Error(err))
 	}
 
 	// Creating a new JWT Manager
 	JwtManager, err := jwt.NewJWTManager(os.Getenv("SECRET_KEY"), 5*time.Hour)
 	if err != nil {
-		log.Fatalf("Failed to create JWT manager: %v", err)
+		logger.Fatal("Failed to create JWT manager", zap.Error(err))
 	}
 
 	// Create a new gRPC server
@@ -75,7 +86,7 @@ func startServer() {
 	// Start the server in a new goroutine
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatalf("Failed to serve: %s", err)
+			logger.Fatal("Failed to serve", zap.Error(err))
 		}
 	}()
 
@@ -87,7 +98,7 @@ func startServer() {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		log.Fatalf("Failed to dial server: %v", err)
+		logger.Fatal("Failed to dial server", zap.Error(err))
 	}
 
 	// Create a new gRPC-Gateway mux
@@ -96,7 +107,7 @@ func startServer() {
 	// Register the service with the gRPC-Gateway
 	err = userpb.RegisterUserServiceHandler(context.Background(), gwmux, connection)
 	if err != nil {
-		log.Fatalf("Failed to register gateway: %v", err)
+		logger.Fatal("Failed to register gateway", zap.Error(err))
 	}
 
 	// Enable CORS
@@ -111,7 +122,7 @@ func startServer() {
 		Addr:    ":8090",
 		Handler: wrappedGwmux,
 	}
-	log.Println("Serving gRPC-Gateway on http://0.0.0.0:8090")
+	logger.Info("Serving gRPC-Gateway", zap.String("address", "http://0.0.0.0:8090"))
 	if err := gwServer.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("Failed to listen and serve: %v", err)
 	}

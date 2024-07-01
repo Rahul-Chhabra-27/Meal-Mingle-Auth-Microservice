@@ -30,13 +30,13 @@ func (UserServiceManager *UserService) AuthenticateUser(ctx context.Context, req
 			Data:       nil,
 			Message:    "The request contains missing or invalid fields.",
 			Error:      "Invalid fields!",
-			StatusCode: 400,
+			StatusCode: StatusBadRequest,
 		}, nil
 	}
 	var existingUser model.User
 	userNotFoundError := userDbConnector.Where("email = ?", userEmail).First(&existingUser).Error
 	// If the user is not found, create a new user with the provided details
-	if userNotFoundError != nil || existingUser.Role != request.Role {
+	if userNotFoundError != nil {
 		logger.Warn("Authentication failed",
 			zap.String("userEmail", userEmail),
 			zap.String("userRole", existingUser.Role),
@@ -45,7 +45,16 @@ func (UserServiceManager *UserService) AuthenticateUser(ctx context.Context, req
 			Data:       nil,
 			Message:    "Authentication Failed, User not found OR Invalid role",
 			Error:      "Not Found",
-			StatusCode: 404,
+			StatusCode: StatusNotFound,
+		}, nil
+	}
+	if existingUser.Role != request.Role {
+		logger.Warn("Invalid role for user", zap.String("userEmail", userEmail), zap.String("userRole", existingUser.Role))
+		return &userpb.AuthenticateUserResponse{
+			Data:       nil,
+			Message:    "Invalid role",
+			Error:      "Unauthorized",
+			StatusCode: StatusUnauthorized,
 		}, nil
 	}
 	if config.ComparePasswords(existingUser.Password, userPassword) != nil {
@@ -53,7 +62,7 @@ func (UserServiceManager *UserService) AuthenticateUser(ctx context.Context, req
 			zap.String("userEmail", userEmail))
 		return &userpb.AuthenticateUserResponse{
 			Message: "Authentication Failed,Wrong Password",
-			Error:   "Unauthorized", StatusCode: 401,
+			Error:   "Unauthorized", StatusCode: StatusUnauthorized,
 		}, nil
 	}
 	// Gennerating the the jwt token.
@@ -65,7 +74,7 @@ func (UserServiceManager *UserService) AuthenticateUser(ctx context.Context, req
 		return &userpb.AuthenticateUserResponse{
 			Data:       nil,
 			Error:      "Internal Server Error",
-			StatusCode: 500,
+			StatusCode: StatusInternalServerError,
 			Message:    "Security Issues, Please try again later.",
 		}, nil
 
@@ -76,7 +85,7 @@ func (UserServiceManager *UserService) AuthenticateUser(ctx context.Context, req
 
 	return &userpb.AuthenticateUserResponse{Error: "",
 		Message:    "User authenticated successfully",
-		StatusCode: 200,
+		StatusCode: StatusCreated,
 		Data: &userpb.Responsedata{
 			User: &userpb.User{
 				UserId:    strconv.FormatUint(uint64(existingUser.ID), 10),
@@ -88,3 +97,108 @@ func (UserServiceManager *UserService) AuthenticateUser(ctx context.Context, req
 		},
 	}, nil
 }
+
+/* 
+package main
+
+import (
+	"auth-microservice/config"
+	"auth-microservice/model"
+	userpb "auth-microservice/proto/user"
+	"context"
+	"strconv"
+	"strings"
+
+	"go.uber.org/zap"
+)
+
+const (
+	StatusBadRequest          = 400
+	StatusNotFound            = 404
+	StatusUnauthorized        = 401
+	StatusInternalServerError = 500
+	StatusCreated             = 201
+)
+
+// AuthenticateUser is an RPC that authenticates a user
+func (userServiceManager *UserService) AuthenticateUser(ctx context.Context, request *userpb.AuthenticateUserRequest) (*userpb.AuthenticateUserResponse, error) {
+	userEmail := request.UserEmail
+	userPassword := request.UserPassword
+
+	logger.Info("Received AuthenticateUser request", zap.String("userEmail", userEmail))
+
+	// Check if the request contains the required fields
+	if userEmail == "" || userPassword == "" || !strings.Contains(userEmail, "@") || !strings.Contains(userEmail, ".") || len(userPassword) < 6 {
+		logger.Warn("Invalid request fields", zap.String("userEmail", userEmail))
+		return &userpb.AuthenticateUserResponse{
+			Data:       nil,
+			Message:    "The request contains missing or invalid fields.",
+			Error:      "Invalid fields!",
+			StatusCode: StatusBadRequest,
+		}, nil
+	}
+
+	var existingUser model.User
+	userNotFoundError := userDbConnector.Where("email = ?", userEmail).First(&existingUser).Error
+
+	// Check if user is found and role matches
+	if userNotFoundError != nil {
+		logger.Warn("User not found", zap.String("userEmail", userEmail), zap.Error(userNotFoundError))
+		return &userpb.AuthenticateUserResponse{
+			Data:       nil,
+			Message:    "User not found",
+			Error:      "Not Found",
+			StatusCode: StatusNotFound,
+		}, nil
+	}
+
+	if existingUser.Role != request.Role {
+		logger.Warn("Invalid role for user", zap.String("userEmail", userEmail), zap.String("userRole", existingUser.Role))
+		return &userpb.AuthenticateUserResponse{
+			Data:       nil,
+			Message:    "Invalid role",
+			Error:      "Unauthorized",
+			StatusCode: StatusUnauthorized,
+		}, nil
+	}
+
+	// Check if password matches
+	if config.ComparePasswords(existingUser.Password, userPassword) != nil {
+		logger.Warn("Authentication failed due to wrong password", zap.String("userEmail", userEmail))
+		return &userpb.AuthenticateUserResponse{
+			Message:    "Authentication Failed, Wrong Password",
+			Error:      "Unauthorized",
+			StatusCode: StatusUnauthorized,
+		}, nil
+	}
+
+	// Generating the JWT token
+	token, err := userServiceManager.jwtManager.GenerateToken(&existingUser)
+	if err != nil {
+		logger.Error("Error in generating token", zap.String("userEmail", userEmail), zap.Error(err))
+		return &userpb.AuthenticateUserResponse{
+			Data:       nil,
+			Error:      "Internal Server Error",
+			StatusCode: StatusInternalServerError,
+			Message:    "Security Issues, Please try again later.",
+		}, nil
+	}
+
+	logger.Info("User authenticated successfully", zap.String("userEmail", existingUser.Email), zap.String("userName", existingUser.Name))
+
+	return &userpb.AuthenticateUserResponse{
+		Error:      "",
+		Message:    "User authenticated successfully",
+		StatusCode: StatusCreated,
+		Data: &userpb.Responsedata{
+			User: &userpb.User{
+				UserId:    strconv.FormatUint(uint64(existingUser.ID), 10),
+				UserName:  existingUser.Name,
+				UserEmail: existingUser.Email,
+				UserPhone: existingUser.Phone,
+			},
+			Token: token,
+		},
+	}, nil
+}
+*/

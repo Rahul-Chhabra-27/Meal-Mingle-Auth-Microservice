@@ -9,9 +9,8 @@ import (
 	"strconv"
 
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
-
-
 
 // AddUser is a RPC that adds a new user to the database
 func (userServiceManager *UserService) AddUser(ctx context.Context, request *userpb.AddUserRequest) (*userpb.AddUserResponse, error) {
@@ -24,7 +23,15 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 	logger.Info("Received AddUser request", 
 	zap.String("userEmail", userEmail), zap.String("userName", userName), 
 	zap.String("userPhone", userPhone), zap.String("userRole", userRole))
-
+	if userRole != model.UserRole && userRole != model.AdminRole {
+		logger.Warn("Invalid user role", zap.String("userRole", userRole))
+		return &userpb.AddUserResponse{
+			Data:       nil,
+			Message:    "Invalid user role. User role can only be user or admin",
+			Error:      "Invalid Role",
+			StatusCode: StatusBadRequest,
+		}, nil
+	}
 	if !config.ValidateFields(userEmail, userPassword, userName, userPhone) {
 		logger.Warn("Invalid request fields", 
 		zap.String("userEmail", userEmail), 
@@ -35,12 +42,13 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 			Data:       nil,
 			Message:    "The request contains missing or invalid fields. Make sure Phone number is 10 digits long.",
 			Error:      "Invalid Request",
-			StatusCode: int64(400),
+			StatusCode: int64(StatusBadRequest),
 		}, nil
 	}
 	var existingUser model.User
 	userNotFoundError := userDbConnector.Where("email = ?", userEmail).First(&existingUser).Error
-	if userNotFoundError != nil {
+	// If the user is not found, create a new user
+	if userNotFoundError == gorm.ErrRecordNotFound {
 		hashedPassword := config.GenerateHashedPassword(userPassword)
 		newUser := &model.User{Name: userName, Email: userEmail,
 			Phone: userPhone, Password: hashedPassword, Role: userRole}
@@ -48,12 +56,12 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 		// Create a new user in the database and return the primary key if successful or an error if it fails
 		primaryKey := userDbConnector.Create(newUser)
 		if primaryKey.Error != nil {
-			logger.Error("Failed to create user", zap.String("userPhone",existingUser.Password), zap.Error(primaryKey.Error))
+			logger.Error("Failed to create user", zap.String("userPhone",existingUser.Phone), zap.Error(primaryKey.Error))
 			return &userpb.AddUserResponse{
 				Data:       nil,
 				Message:    "The phone number is already registered.",
 				Error:      "Conflict",
-				StatusCode: int64(400),
+				StatusCode: int64(StatusConflict),
 			}, nil
 		}
 		// Gennerating the the jwt token.
@@ -63,14 +71,14 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 			return &userpb.AddUserResponse{
 				Data:       nil,
 				Error:      "Internal Server Error",
-				StatusCode: int64(500),
+				StatusCode: int64(StatusInternalServerError),
 				Message:    "Security Issues, Please try again later.",
 			}, nil
 		}
 		logger.Info(fmt.Sprintf("User %s created successfully", newUser.Name))
 		return &userpb.AddUserResponse{
 			Message: "User created successfully",
-			Error:   "", StatusCode: 200,
+			Error:   "", StatusCode: int64(StatusOK),
 			Data: &userpb.Responsedata{
 				User: &userpb.User{
 					UserId:    strconv.FormatUint(uint64(newUser.ID), 10),
@@ -81,12 +89,12 @@ func (userServiceManager *UserService) AddUser(ctx context.Context, request *use
 				Token: token,
 			},
 		}, nil
-	}
+	} 
 	logger.Warn("User email already registered", zap.String("userEmail", userEmail))
 	return &userpb.AddUserResponse{
 		Data:       nil,
 		Message:    "User Email is already registered",
 		Error:      "Conflict",
-		StatusCode: int64(409),
+		StatusCode: int64(StatusConflict),
 	}, nil
 }
