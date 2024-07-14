@@ -67,7 +67,9 @@ func VerifyToken(accessToken string) (*UserClaims, error) {
 }
 func UnaryInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 	// skip the authentication for the health check endpoint
-	if info.FullMethod == "/userpb.UserService/AddUser" || info.FullMethod == "/userpb.UserService/AuthenticateUser" {
+	if info.FullMethod == "/userpb.UserService/AddUser" || 
+	info.FullMethod == "/userpb.UserService/AuthenticateUser" || 
+	info.FullMethod == "/userpb.UserService/PhoneVerification" {
 		return handler(ctx, req)
 	}
 	md, ok := metadata.FromIncomingContext(ctx)

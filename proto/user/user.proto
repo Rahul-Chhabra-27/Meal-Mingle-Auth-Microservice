@@ -91,6 +91,18 @@ message UpdateOwnerDetailsResponse {
     string error = 3;
     int64 statusCode = 4;
 }
+message PhoneVerificationResponseData {
+    string phone = 1;
+}
+message PhoneVerificationRequest {
+    string phone = 1;
+}
+message PhoneVerificationResponse {
+    PhoneVerificationResponseData data = 1;
+    string message = 2;
+    string error = 3;
+    int64 statusCode = 4;
+}
 service UserService {
     rpc AddUser(AddUserRequest) returns (AddUserResponse){
         option (google.api.http) = {
@@ -119,6 +131,12 @@ service UserService {
     rpc GetUserDetails(GetUserDetailsRequest) returns (GetUserDetailsResponse){
         option (google.api.http) = {
             get: "/api/users/details"
+        };
+    };
+    rpc PhoneVerification(PhoneVerificationRequest) returns (PhoneVerificationResponse){
+        option (google.api.http) = {
+            post: "/api/users/phone/verify"
+            body: "*"
         };
     };
 }

@@ -24,14 +24,7 @@ func DatabaseDsn() string {
 		os.Getenv("MYSQL_DATABASE"),
 	)
 }
-func ValidateFields(userEmail string, userPassword string, userName string, userPhone string) bool {
-	// Responsible for validating the fields
-	if userEmail == "" || userPassword == "" || userName == "" || userPhone == "" {
-		return false
-	}
-	if !strings.Contains(userEmail, "@") || !strings.Contains(userEmail, ".") {
-		return false
-	}
+func ValidatePhone(userPhone string) bool {
 	if len(userPhone) != 10 {
 		return false
 	}
@@ -41,8 +34,18 @@ func ValidateFields(userEmail string, userPassword string, userName string, user
 			return false
 		}
 	}
+	return true
+}
+func ValidateFields(userEmail string, userPassword string, userName string, userPhone string) bool {
+	// Responsible for validating the fields
+	if userEmail == "" || userPassword == "" || userName == "" || userPhone == "" {
+		return false
+	}
+	if !strings.Contains(userEmail, "@") || !strings.Contains(userEmail, ".") {
+		return false
+	}
 	// password validation also
-	return len(userPassword) >= 6;
+	return len(userPassword) >= 6 && ValidatePhone(userPhone);
 }
 func GoDotEnvVariable(key string) string {
 	err := godotenv.Load(".env")

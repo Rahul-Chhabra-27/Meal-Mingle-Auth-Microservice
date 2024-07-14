@@ -27,6 +27,7 @@ type UserServiceClient interface {
 	AddOwnerDetails(ctx context.Context, in *AddOwnerDetailsRequest, opts ...grpc.CallOption) (*AddOwnerDetailsResponse, error)
 	UpdateOwnerDetails(ctx context.Context, in *UpdateOwnerDetailsRequest, opts ...grpc.CallOption) (*UpdateOwnerDetailsResponse, error)
 	GetUserDetails(ctx context.Context, in *GetUserDetailsRequest, opts ...grpc.CallOption) (*GetUserDetailsResponse, error)
+	PhoneVerification(ctx context.Context, in *PhoneVerificationRequest, opts ...grpc.CallOption) (*PhoneVerificationResponse, error)
 }
 
 type userServiceClient struct {
@@ -82,6 +83,15 @@ func (c *userServiceClient) GetUserDetails(ctx context.Context, in *GetUserDetai
 	return out, nil
 }
 
+func (c *userServiceClient) PhoneVerification(ctx context.Context, in *PhoneVerificationRequest, opts ...grpc.CallOption) (*PhoneVerificationResponse, error) {
+	out := new(PhoneVerificationResponse)
+	err := c.cc.Invoke(ctx, "/userpb.UserService/PhoneVerification", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -91,6 +101,7 @@ type UserServiceServer interface {
 	AddOwnerDetails(context.Context, *AddOwnerDetailsRequest) (*AddOwnerDetailsResponse, error)
 	UpdateOwnerDetails(context.Context, *UpdateOwnerDetailsRequest) (*UpdateOwnerDetailsResponse, error)
 	GetUserDetails(context.Context, *GetUserDetailsRequest) (*GetUserDetailsResponse, error)
+	PhoneVerification(context.Context, *PhoneVerificationRequest) (*PhoneVerificationResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -112,6 +123,9 @@ func (UnimplementedUserServiceServer) UpdateOwnerDetails(context.Context, *Updat
 }
 func (UnimplementedUserServiceServer) GetUserDetails(context.Context, *GetUserDetailsRequest) (*GetUserDetailsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserDetails not implemented")
+}
+func (UnimplementedUserServiceServer) PhoneVerification(context.Context, *PhoneVerificationRequest) (*PhoneVerificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PhoneVerification not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -216,6 +230,24 @@ func _UserService_GetUserDetails_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_PhoneVerification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PhoneVerificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).PhoneVerification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/userpb.UserService/PhoneVerification",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).PhoneVerification(ctx, req.(*PhoneVerificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -242,6 +274,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserDetails",
 			Handler:    _UserService_GetUserDetails_Handler,
+		},
+		{
+			MethodName: "PhoneVerification",
+			Handler:    _UserService_PhoneVerification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
