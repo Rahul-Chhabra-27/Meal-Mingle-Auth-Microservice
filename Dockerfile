@@ -1,10 +1,10 @@
 # Base image
 FROM golang:1.22.2-alpine3.19
 
-# Copy wait-for-it script
-
 # Move to working directory /app
 WORKDIR /app
+
+RUN apk add --no-cache bash
 
 # Copy the code into the container
 COPY . .
@@ -16,4 +16,4 @@ RUN go mod tidy && go mod vendor
 EXPOSE 8090
 
 # Command to run the application when starting the container
-CMD ["go","run","."]
+CMD ["go", "run", "."]

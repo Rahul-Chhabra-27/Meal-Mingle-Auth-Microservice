@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strings"
 	"unicode"
 
@@ -45,7 +44,7 @@ func ValidateFields(userEmail string, userPassword string, userName string, user
 		return false
 	}
 	// password validation also
-	return len(userPassword) >= 6 && ValidatePhone(userPhone);
+	return len(userPassword) >= 6 && ValidatePhone(userPhone)
 }
 func GoDotEnvVariable(key string) string {
 	err := godotenv.Load(".env")
@@ -88,23 +87,22 @@ func ValidateOwnerDeatils(AccountNumber string, IFSCCode string,
 	BankName string, BranchName string, PanNumber string,
 	AdharNumber string, GstNumber string) bool {
 	// Responsible for validating the fields
+	fmt.Println("AccountNumber", AccountNumber, "IFSCCode", IFSCCode, "BankName", BankName, "BranchName", BranchName, "PanNumber", PanNumber, "AdharNumber", AdharNumber, "GstNumber", GstNumber)
+	fmt.Println("Here1")
 	if AccountNumber == "" || IFSCCode == "" || BankName == "" ||
 		BranchName == "" || PanNumber == "" || AdharNumber == "" || GstNumber == "" {
 		return false
 	}
-	if len(AccountNumber) != 10 {
+	fmt.Println("Here2")
+	if len(AccountNumber) != 12 {
 		return false
 	}
-
+	fmt.Println("Here3")
 	// Check if IFSC code is 11 characters and starts with a letter
 	if len(IFSCCode) != 11 || !unicode.IsLetter(rune(IFSCCode[0])) {
 		return false
 	}
-
+	fmt.Println("Here4")
 	// Check if GST number is 15 characters and matches the pattern
-	gstPattern := regexp.MustCompile(`\d{2}[A-Z]{5}\d{4}[A-Z]{1}\d[Z]{1}[A-Z\d]{1}`)
-	if len(GstNumber) != 15 || !gstPattern.MatchString(GstNumber) {
-		return false
-	}
 	return true
 }
