@@ -88,21 +88,21 @@ func ValidateOwnerDeatils(AccountNumber string, IFSCCode string,
 	AdharNumber string, GstNumber string) bool {
 	// Responsible for validating the fields
 	fmt.Println("AccountNumber", AccountNumber, "IFSCCode", IFSCCode, "BankName", BankName, "BranchName", BranchName, "PanNumber", PanNumber, "AdharNumber", AdharNumber, "GstNumber", GstNumber)
-	fmt.Println("Here1")
+	
 	if AccountNumber == "" || IFSCCode == "" || BankName == "" ||
 		BranchName == "" || PanNumber == "" || AdharNumber == "" || GstNumber == "" {
 		return false
 	}
-	fmt.Println("Here2")
+
 	if len(AccountNumber) != 12 {
 		return false
 	}
-	fmt.Println("Here3")
+	
 	// Check if IFSC code is 11 characters and starts with a letter
 	if len(IFSCCode) != 11 || !unicode.IsLetter(rune(IFSCCode[0])) {
 		return false
 	}
-	fmt.Println("Here4")
+	
 	// Check if GST number is 15 characters and matches the pattern
 	return true
 }
